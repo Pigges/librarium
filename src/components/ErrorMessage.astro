@@ -1,0 +1,59 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Code } from 'astro:components';
+
+import config from '../config';
+
+interface Props {
+	error?: object;
+}
+
+const { error } = Astro.props;
+---
+
+<div class="wrapper">
+    <input type="checkbox" id="check_id" />
+    <h2>Help, we caught an error!</h2>
+    <h3>This is what we know:</h3>
+    <div class="code">
+        <Code style={"padding: 1em;"} code={JSON.stringify(error, null, 2)} lang="json" />
+        <label class="expand" for="check_id" title="Expand">&darr;</label>
+    </div>
+</div>
+<style>
+    .wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5em;
+    }
+
+    [type="checkbox"] {
+        display: none;
+    }
+
+    .wrapper .code {
+        height: auto;
+        max-height: 500px;
+        overflow: hidden;
+        transition: 0.3s;
+        border-radius: 1em;
+        position: relative;
+    }
+
+    .wrapper .expand {
+        position: absolute;
+        top: 0.5em;
+        right: 1em;
+        transition: 0.3s;
+        user-select: none;
+        font-size: 2rem;
+    }
+
+    .wrapper [type="checkbox"]:checked ~ .code {
+        max-height: unset;
+    }
+
+    .wrapper [type="checkbox"]:checked ~ .code .expand {
+        transform: rotate(180deg);
+    }
+</style>

@@ -1,0 +1,225 @@
+---
+import Layout from './Layout.astro';
+import config from '../config';
+import generateContentUrl from '../utils/generateContentUrl';
+import removeMD from 'remove-markdown';
+
+import MarkdownClaim from '../components/MarkdownClaim.astro';
+import renderMarkdown from '../utils/renderMarkdown';
+
+import ClaimVideo from '../components/ClaimVideo.astro';
+import ClaimImage from '../components/ClaimImage.astro';
+import ClaimDocument from '../components/ClaimDocument.astro';
+import formatDate from '../utils/formatDate';
+
+interface Props {
+	claim?: string;
+}
+
+const { claim } = Astro.props;
+let fetched;
+
+const streamURL = generateContentUrl(claim.name, claim.claim_id);
+
+if (claim.value.stream_type === 'document') {
+	fetched = await (await fetch(streamURL)).text();
+}
+
+const metadata = {
+    title: (claim.value && claim.value.title) ? claim.value.title : claim.name,
+    image: config.THUMBNAIL_SERVER(claim)
+}
+
+const meta = {
+	description: renderMarkdown(claim.value.description) || "No description.",
+	created: formatDate(claim.timestamp*1000),
+	staked: (claim.meta.support_amount || 0) + " LBC",
+	license: (claim.value && claim.value.license) ? claim.value.license : undefined
+}
+
+let StreamType;
+
+switch (claim.value.stream_type) {
+	case "video":
+	case "audio":
+		StreamType = ClaimVideo;
+		break;
+	case "image":
+		StreamType = ClaimImage;
+		break;
+	case "document":
+		StreamType = ClaimDocument;
+		break;
+	default:
+		StreamType = `File type ${claim.value.stream_type} not supported.`
+}
+
+// const structuredData = {
+// 	"@context": "https://schema.org",
+// 	"@type": "VideoObject",
+// 	"name": claim.value && claim.value.title ? claim.value.title : claim.name,
+// 	"description": claim.value.description ? removeMD(claim.value.description.length > 200 ? claim.value.description.substring(0, 200) + '...' : claim.value.description) : "No description",
+// 	"thumbnailUrl": config.THUMBNAIL_SERVER(claim),
+// 	"uploadDate": new Date(claim.timestamp*1000).toISOString(),
+// 	// "duration": "PT11M35S",
+// 	"url": Astro.url,
+// 	"contentUrl": config.LBRY_STREAMING_URL(claim),
+// 	// "embedUrl": "",
+// 	"author": {
+// 		"@type": "Person",
+// 		"name": claim.signing_channel ? ((claim.signing_channel.value && claim.signing_channel.value.title) ? claim.signing_channel.value.title : claim.signing_channel.name) : 'Anonymous',
+// 		"url": claim.signing_channel ? new URL(claim.signing_channel.permanent_url.replace('lbry://', '').replaceAll('#', ':'), import.meta.env.HOST) : undefined
+// 	},
+// 	"thumbnail": {
+// 		"@type": "ImageObject",
+// 		"url": config.THUMBNAIL_SERVER(claim)
+// 	},
+// 	"keywords": (claim.value && claim.value.tags) ?  claim.value.tags.join(',') : undefined,
+// 	"width": (claim.value && claim.value.video) ? claim.value.video.width : undefined,
+// 	"height": (claim.value && claim.value.video) ? claim.value.video.height : undefined,
+// 	// "potentialAction": {
+// 	// 	"@type": "SeekToAction",
+// 	// 	"target": "",
+// 	// 	"startOffset-input": "required name=seek_to_second_number"
+// 	// }---
+---
+
+<Layout description={claim.value.description} metadata={metadata}>
+	<div slot="head">
+		<!-- <script type="application/ld+json" set:html={JSON.stringify(structuredData)} /> -->
+	</div>
+	<div class="claim">
+		<link rel="stylesheet" href="/$/css/plyr.css" />
+		<div class="container">
+				<StreamType claim={claim}/>
+		</div>
+		<h1>{claim.value ? claim.value.title : claim.name}</h1>
+		{claim.signing_channel && (
+			<a class="author" href={`/${claim.signing_channel.name}:${claim.signing_channel.claim_id}`}>
+				<div class="avatar"><img src={config.THUMBNAIL_SERVER(claim.signing_channel)} alt=""/></div>
+				<div class="name">
+					<p>{(claim.signing_channel && claim.signing_channel.value) ? claim.signing_channel.value.title : claim.signing_channel.name}</p>
+				</div>
+			</a>
+		) || (
+		<div class="author">
+				<div class="name">
+					<p>Anonymous</p>
+				</div>
+			</div>
+		)}
+		<div class="metadata">
+			{claim.value.tags && (
+				<section class="tags">
+					<div>
+						{claim.value.tags.map(tag=>(
+							<a href={`/$/search?tags=${tag}`}>{tag}</a>
+						))}
+					</div>
+				</section>
+			)}
+			{Object.keys(meta).map(i=>{
+				return meta[i] ?
+				(
+					<section class={i}>
+						<label>{i}</label>
+						<div class="value"><Fragment set:html={meta[i]} /></div>
+					</section>
+				) : "";
+			})}
+			{(claim.value && claim.value.source && claim.value.source.size) && (
+				<section class="size">
+				<label>File size</label>
+				<p>{claim.value.source.size || 0} Bytes</p>
+			</section>
+			)}
+		</div>
+		<hr>
+	</div>
+	<style>
+
+		.claim {
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+		}
+		.container {
+			width: 100%;
+			/* aspect-ratio: 16/9; */
+			/* padding-top: 46.86% !important; */
+			position: relative;
+		}
+	
+		.author {
+			display: flex;
+			width: 100%;
+		}
+	
+		.author .avatar {
+			display: flex;
+			justify-content: center;
+			width: 60px;
+			height: 60px;
+			overflow: hidden;
+			border-radius: 50%;
+			background-color: #111;
+			overflow: hidden;
+		}
+	
+		.author .avatar img {
+			height: 100%;
+		}
+
+		.metadata {
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+    	}
+
+		.metadata section {
+			display: flex;
+			flex-direction: column;
+		}
+
+		.metadata section label {
+			font-weight: bold;
+			padding-bottom: 0.5em;
+			text-transform: capitalize;
+		}
+
+		.metadata .tags label {
+			line-height: 2rem;
+		}
+
+		.metadata .tags a {
+			padding: 5px;
+			margin: 0.5em;
+			border-radius: 8px;
+			background-color: #111;
+		}
+		</style>
+	<style is:global>
+		.plyr {
+			position: absolute !important;
+			width: 100%;
+			height: 100%;
+			top: 0;
+			left: 0;
+			/* aspect-ratio: 16 / 9; */
+			background-color: #000;
+		}
+
+		section .value {
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+			word-break: break-word;
+			padding-left: 0.5em;
+		}
+
+		.description a {
+			/* display: block; */
+			padding-right: 1em;
+		}
+	</style>
+</Layout>

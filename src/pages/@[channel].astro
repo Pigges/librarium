@@ -1,0 +1,173 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
+import Cards from '../components/Cards.astro';
+import NotFound from '../layouts/NotFound.astro';
+import getClaim from '../utils/getClaim';
+
+import config from '../config';
+
+import LBRY from '../utils/LBRY';
+import renderMarkdown from '../utils/renderMarkdown';
+import formatDate from '../utils/formatDate';
+
+const { channel } = Astro.params;
+
+const claim = await getClaim(`lbry://@${channel}`);
+
+let metadata, meta = {};
+if (!claim.error) {
+    metadata = {
+        title: (claim.value && claim.value.title) ? claim.value.title : claim.name,
+        image: config.THUMBNAIL_SERVER(claim)
+    }
+
+    meta = {
+        description: renderMarkdown(claim.value.description) || "No description.",
+        contact: renderMarkdown(claim.value.email),
+        website: renderMarkdown(claim.value.website_url),
+        claims: claim.meta ? `${claim.meta.claims_in_channel}` : undefined,
+        created: formatDate(claim.timestamp*1000),
+        staked: (claim.meta.support_amount || 0) + " LBC",
+    }
+}
+
+---
+
+{claim.error && (
+    <NotFound error={claim.error}/>
+) || (
+<>
+
+
+<Layout description={claim.value.description} metadata={metadata}>
+    <div slot="head">
+        
+    </div>
+	<div class="channel">
+        <div class="head">
+            <div class="cover">
+                <div class="img"><img src={`/$/cover/${claim.claim_id}`} alt=""></div>
+            </div>
+            <hr>
+            <section class="author">
+                <div class="avatar"><img src={config.THUMBNAIL_SERVER(claim)} alt=""/></div>
+                <div class="name">
+                    {(claim.value && claim.value.title) && (
+                        <p>{claim.value.title}</p>
+                    )}
+                    <p>{claim.name}</p>
+                </div>
+            </section>
+            <div class="metadata">
+                {claim.value.tags && (
+                    <section class="tags">
+                        <div>
+                            {claim.value.tags.map(tag=>(
+                                <a href={`/$/search?tags=${tag}`}>{tag}</a>
+                            ))}
+                        </div>
+                    </section>
+                )}
+                {Object.keys(meta).map(i=>{
+                    return meta[i] ?
+                    (
+                        <section class={i}>
+                            <label>{i}</label>
+                            <div class="value"><Fragment set:html={meta[i]} /></div>
+                        </section>
+			        ) : "";
+                })}
+            </div>
+        </div>
+    </div>
+    <Cards feed={{
+        page_size: 32,
+        claim_type: [
+            "stream",
+            "repost"
+        ],
+        no_totals:true,
+        any_tags:[],
+        channel_id: claim.claim_id,
+        order_by:[
+            "release_time"
+        ]
+    }} total_claims={claim.meta.claims_in_channel}/>
+</Layout>
+
+<style>
+	.cover {
+		width: 100%;
+		padding-top: 16.5625% !important;
+		position: relative;
+	}
+
+	.cover .img {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		top: 0;
+		left: 0;
+		background-color: #000;
+        overflow: hidden;
+	}
+
+    .cover .img img {
+        width: 100% ;
+    }
+
+    .author {
+		display: flex;
+		width: 100%;
+	}
+
+	.author .avatar {
+		display: flex;
+		justify-content: center;
+		width: 60px;
+		height: 60px;
+		overflow: hidden;
+		border-radius: 50%;
+		background-color: #111;
+	}
+
+	.author .avatar img {
+		min-height: 100%;
+        min-width: 100%;
+        object-fit: cover;
+	}
+
+    .metadata {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .metadata section {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .metadata section label {
+        font-weight: bold;
+        padding-bottom: 0.5em;
+        text-transform: capitalize;
+    }
+
+    .metadata .tags label {
+        line-height: 2rem;
+    }
+
+    .metadata .tags a {
+        padding: 5px;
+        margin: 0.5em;
+        border-radius: 8px;
+        background-color: #111;
+    }
+</style>
+</>
+)}

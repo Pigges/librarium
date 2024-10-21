@@ -1,0 +1,92 @@
+---
+import Card from './Card.astro';
+import ErrorMessage from './ErrorMessage.astro';
+
+import LBRY from '../utils/LBRY';
+
+interface Props {
+	feed?: object;
+    total_claims?: number;
+}
+
+const { feed, total_claims } = Astro.props;
+
+if (feed.page === undefined) feed.page = Number(Astro.url.searchParams.get('p') || 1);
+
+let claims = {};
+try {
+    claims = await LBRY.claim_search(feed);
+} catch (e) {
+    claims = e;
+}
+
+console.log(claims);
+
+
+const totalPages = Math.ceil(total_claims ? total_claims / feed.page_size : claims.total_pages);
+
+const currentPage = Number(Astro.url.searchParams.get('p') || 1);
+
+const paginate = (url, change) => {
+    url = new URL(url);
+    url.searchParams.set('p', String(currentPage + change))
+
+    return url.pathname + '?' + url.searchParams.toString();
+}
+---
+
+{claims.error && (
+    <ErrorMessage error={claims}/>
+) || (
+
+<section>
+    <hr/>
+    <nav>
+        <div>
+            {currentPage > 1 && (
+                <a href={paginate(Astro.url, -1)}>Back</a>
+            )}
+        </div>
+        <div>
+            <p>{`${currentPage}/${totalPages}`}</p>
+        </div>
+        <div>
+            {currentPage < totalPages && (
+                <a href={paginate(Astro.url, 1)}>Next</a>
+            )}
+        </div>
+    </nav>
+    <div class="claims">
+        {claims.items.map(item=>(
+            <Card claim={item}/>
+        ))}
+    </div>
+    <nav>
+        <div>
+            {currentPage > 1 && (
+                <a href={paginate(Astro.url, -1)}>Back</a>
+            )}
+        </div>
+        <div>
+            {currentPage < totalPages && (
+                <a href={paginate(Astro.url, 1)}>Next</a>
+            )}
+        </div>
+    </nav>
+</section>
+<style>
+	.claims {
+		display: flex;
+        flex-flow: row wrap;
+        text-rendering: optimizeSpeed;
+		/* gap: 25px; */
+		margin: auto;
+        width: 100%;
+	}
+    nav {
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+
+)}

@@ -1,0 +1,42 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Card from '../components/Card.astro';
+import Cards from '../components/Cards.astro';
+import Navigation from '../components/Navigation.astro';
+
+import LBRY from '../utils/LBRY';
+
+---
+
+<Layout>
+    <Navigation />
+	<Cards feed={{
+        page_size: 24,
+        "claim_type":[
+            "stream",
+            "repost"
+        ],
+        "no_totals":true,
+        "any_tags":[],
+        "not_tags":["porn","porno","nsfw","mature","xxx","sex","creampie","blowjob","handjob","vagina","boobs","big boobs","big dick","pussy","cumshot","anal","hard fucking","ass","fuck","hentai","c:members-only"],
+        "not_channel_ids":[],
+        "order_by":[
+            "trending_group",
+            "trending_mixed"
+        ],
+        "remove_duplicates":true,
+        "has_source":true,
+        "release_time":">1700935200",
+        "limit_claims_per_channel":2,
+        "duration":">=60"
+    }}/>
+</Layout>
+
+<style>
+	.claims {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 25px;
+		margin: auto;
+	}
+</style>

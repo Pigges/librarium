@@ -1,0 +1,119 @@
+---
+import Header from '../components/Header.astro';
+import removeMD from 'remove-markdown';
+import renderMarkdown from '../utils/renderMarkdown';
+import config from '../config';
+
+import LBRY from '../utils/LBRY';
+
+interface Props {
+	title?: string;
+	description?: string;
+	metadata?: object;
+}
+
+let { title, description, metadata={} } = Astro.props;
+
+// Truncate description and remove Markdown
+description = description ? removeMD(description.length > 200 ? description.substring(0, 200) + '...' : description) : "Librarium - A minimalistic site for accessing the LBRY network"
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>{title ? `${title} - Librarium` : 'Librarium'}</title>
+		<meta name="description" content={description} />
+		<meta name="generator" content={Astro.generator} />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+
+
+		<meta property="og:url" content={Astro.url}>
+		<meta property="og:type" content="website"/>
+		<meta property="og:title" content={metadata.title || "Librarium"} />
+		<meta property="og:description" content={description} />
+    	<meta property="og:site_name" content={"Librarium"} />
+		<meta name="theme-color" content="#f9d75e">
+		<meta property="og:locale" content="en"/>
+
+		<meta property="og:image" content={metadata.image} />
+        <meta property="og:image:secure_url" content={metadata.image} />
+        <meta property="og:image:width"  content="1280"/>
+        <meta property="og:image:height"  content="720"/>
+
+		<!-- Twitter Meta Tags -->
+		<meta name="twitter:card" content="summary_large_image">
+		<meta property="twitter:domain" content={Astro.url.hostname}>
+		<meta property="twitter:url" content={Astro.url}>
+		<meta name="twitter:title" content={metadata.title || "Librarium"}>
+		<meta name="twitter:description" content={description}>
+		<meta name="twitter:image" content={metadata.image}>
+
+		<slot name="head" />
+	</head>
+	<body>
+		<Header/>
+		{process.env.BANNER && (
+			<div class="banner"><Fragment set:html={process.env.BANNER}/></div>
+		)}
+		<main>
+			<slot name="errorMessage" />
+			{LBRY.getConnected() && (
+				<slot />
+			) || (
+				<>
+					<Fragment set:html={renderMarkdown(`
+# Please wait!
+## We aren't connected to LBRYnet yet.
+If this problem persists, make sure that it's accessable at [\`${config.LBRYNET}\`](${config.LBRYNET}\).
+
+Or, if it's incorrect, please change the \`LBRYNET\` environment variable.
+						`)} />
+				</>
+			)}
+		</main>
+	</body>
+</html>
+<style is:global>
+
+	:root {
+		--accent: #F9D75E;
+	}
+
+	* {
+		margin: 0;
+		box-sizing: border-box;
+	}
+
+	a {
+		text-decoration: none;
+		color: var(--accent);
+		opacity: 0.9;
+	}
+
+	a:hover {
+		/* color: var(--accent); */
+		opacity: 1;
+	}
+
+	hr {
+		margin: 25px 0;
+	}
+
+	html { color-scheme: light dark; }
+
+
+	html {
+		font-family: system-ui, sans-serif;
+	}
+
+	body {
+		display: flex;
+		flex-direction: column;
+		width: 80%;
+		margin: auto;
+		gap: 10px;
+		padding: 16px;
+	}
+</style>

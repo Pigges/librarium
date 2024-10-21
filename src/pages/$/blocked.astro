@@ -1,0 +1,82 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Cards from '../../components/Cards.astro';
+import Card from '../../components/Card.astro';
+import ErrorMessage from '../../components/ErrorMessage.astro';
+
+// const query = new URL(Astro.request.url).searchParams;
+
+const claims = await (await fetch('https://cdn.discordapp.com/attachments/1066450096566313050/1250882523152646155/blocked.json?ex=666c8ea1&is=666b3d21&hm=accc8d9b4719f3d749757b64e4a8f4fe8e2f0dbac44ad38e3cd372f3922a9a69&')).json();
+
+
+const pageSize = 50;
+
+const totalPages = Math.ceil(claims.length / pageSize);
+
+const currentPage = Number(Astro.url.searchParams.get('p') || 1);
+
+const paginate = (url, change) => {
+    url = new URL(url);
+    url.searchParams.set('p', String(currentPage + change))
+
+    return url.pathname + '?' + url.searchParams.toString();
+}
+---
+
+{claims.error && (
+    <ErrorMessage error={claims}/>
+) || (
+
+<Layout>
+    <h1>Odysee's Blocked Claims</h1>
+    <section>
+        <nav>
+            <div>
+                {currentPage > 1 && (
+                    <a href={paginate(Astro.url, -1)}>Back</a>
+                )}
+            </div>
+            <div>
+                <p>{`${currentPage}/${totalPages}`}</p>
+            </div>
+            <div>
+                {currentPage < totalPages && (
+                    <a href={paginate(Astro.url, 1)}>Next</a>
+                )}
+            </div>
+        </nav>
+        <div class="claims">
+            {claims.slice(pageSize*currentPage, pageSize*(currentPage+1)).map(claim=>(
+                <Card claim={claim}/>
+            ))}
+        </div>
+        <nav>
+            <div>
+                {currentPage > 1 && (
+                    <a href={paginate(Astro.url, -1)}>Back</a>
+                )}
+            </div>
+            <div>
+                {currentPage < totalPages && (
+                    <a href={paginate(Astro.url, 1)}>Next</a>
+                )}
+            </div>
+        </nav>
+    </section>
+</Layout>
+<style>
+	.claims {
+		display: flex;
+        flex-flow: row wrap;
+        text-rendering: optimizeSpeed;
+		/* gap: 25px; */
+		margin: auto;
+        width: 100%;
+	}
+    nav {
+        display: flex;
+        justify-content: space-between;
+    }
+</style>
+
+)}

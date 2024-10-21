@@ -1,0 +1,43 @@
+
+services:
+  librarium:
+    container_name: librarium
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 4321:4321
+    # networks:
+    #   - lbry
+    environment:
+      BANNER: "<strong>NOTICE:</strong> This is a dev instance, don't rely on it working 100% of the time."
+      LBRYNET: "http://lbrynet:5279"
+      PLAYER_SERVER: "https://cdn.lbry.nu/get/{claimName}/{claimId}"
+
+  # lbrynet:
+  #   container_name: lbrynet
+  #   build:
+  #     context: ./docker/lbrynet
+  #     dockerfile: ./Dockerfile
+  #   ports:
+  #     - "5279:5279"
+  #   expose:
+  #     - "5279:5279"
+  #   networks:
+  #     - lbry
+
+  lbrynet:
+    container_name: lbrynet
+    image: docker.io/odyseeteam/lbrynet-tv:0.110.0
+    volumes:
+      - ./data/lbrynet:/storage
+      - ./docker/lbrynet/:/config/
+    environment:
+      SDK_CONFIG: "/config/daemon_settings.yml"
+    ports:
+      - 5279:5279
+
+
+# networks:
+#   lbry:
+#     driver: bridge

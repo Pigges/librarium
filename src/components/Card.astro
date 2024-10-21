@@ -1,0 +1,156 @@
+---
+import { formatDuration } from '../utils/formatDuration.js';
+import config from '../config';
+
+interface Props {
+	claim: object
+}
+
+const { claim } = Astro.props;
+
+const content = claim.value_type === 'repost' ? claim.reposted_claim : claim;
+
+if (!content) return;
+
+---
+
+<div class:list={["claim", (content.value_type == "channel" ? "channel" : "")]}>
+	<a href={content.permanent_url.replaceAll('#', ':').replace('lbry://', '/')}>
+		<div class="thumbnail" >
+			{claim.reposted_claim && (
+				<div class="repost">
+					<p>Reposted</p>
+					<p>{claim.signing_channel.name}</p>
+				</div>
+			)}
+			<img src={config.THUMBNAIL_SERVER(content)} loading="lazy" alt=""/>
+			{content.value.video && (
+				<p class="duration">{formatDuration(content.value.video.duration)}</p>
+			)}
+		</div>
+		<h2 class="title">{content.value && content.value.title ? content.value.title : content.name}</h2>
+	</a>
+	{content.signing_channel && (
+		<a class="author" href={content.signing_channel.canonical_url ? content.signing_channel.canonical_url.replaceAll('#', ':').replace('lbry://', '/') : ''}>
+			<div class="avatar">
+				<img src={config.THUMBNAIL_SERVER(content.signing_channel)} loading="lazy" alt=""/>
+			</div>
+			<p class="name">{content.signing_channel.value ? content.signing_channel.value.title : content.signing_channel.name || 'Anonymous'}</p>
+		</a>
+	)}
+	{(content.value_type !== 'channel') && (
+		<p class="released">Shared {new Date((content.value.release_time || content.timestamp)*1000).toLocaleDateString('en-GB')}</p>
+	)}
+</div>
+<style>
+	a {
+		text-decoration: none;
+		color: inherit;
+	} 
+
+	.claim {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		width: calc(20% - 20px);
+		margin: 10px;
+	}
+
+	.thumbnail {
+		width: 100%;
+		padding-top: 56.25%;
+		position: relative;
+		background-color: #000;
+		overflow: hidden;
+	}
+
+	.thumbnail img {
+		position: absolute;
+		height: 100%;
+		top: 0;
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+	.channel .thumbnail {
+		width: 56.25%;
+		margin: auto;
+		border-radius: 50%;
+		/* background-color: transparent; */
+	}
+
+	.channel .thumbnail img {
+	}
+
+	.thumbnail .duration {
+		position: absolute;
+		bottom: 7px;
+		right: 7px;
+		padding: 7px;
+		border-radius: 7px;
+		background-color: #111;
+	}
+
+	.thumbnail .repost {
+		font-weight: bold;
+		position: absolute;
+		top: 15%;
+		left: -35%;
+		width: 100%;
+		text-align: center;
+		transform: rotate(-45deg);
+		z-index: 10;
+		background-color: var(--accent);
+	}
+
+	.author {
+		display: flex;
+		width: 100%;
+	}
+
+	.title {
+		font-size: 1rem;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		display: -webkit-box;
+		overflow: hidden;
+		word-break: break-word;
+		height: 2.4rem;
+		line-height: 1.2rem;
+	}
+
+	.channel .title {
+		text-align: center;
+	}
+
+	.author {
+		display: flex;
+		gap: 0.5em;
+		align-items: center;
+	}
+
+	.author .avatar {
+		display: flex;
+		justify-content: center;
+		min-width: 30px;
+		max-width: 30px;
+		height: 30px;
+		overflow: hidden;
+		border-radius: 50%;
+		background-color: #111;
+	}
+
+	.author .avatar img {
+		height: 100%;
+        width: 100%;
+        object-fit: cover;
+	}
+
+	.author .name {
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		display: -webkit-box;
+		overflow: hidden;
+		word-break: break-word;
+	}
+</style>

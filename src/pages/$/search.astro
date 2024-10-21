@@ -1,0 +1,38 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Cards from '../../components/Cards.astro';
+
+const query = new URL(Astro.request.url).searchParams;
+
+const text = query.get('q') ? query.get('q').replaceAll(/[+\ ]/g, m => ({'+': '\+', ' ': '+'}[m])) : "";
+const tags = query.get('tags') ? query.get('tags').split(',') : [];
+
+---
+
+<Layout>
+	<Cards feed={{
+		"page_size":24,
+		text,
+		claim_type:[
+			"channel",
+            "stream",
+            "repost"
+        ],
+		"any_tags": tags,
+		"not_tags":["porn","porno","nsfw","mature","xxx","sex","creampie","blowjob","handjob","vagina","boobs","big boobs","big dick","pussy","cumshot","anal","hard fucking","ass","fuck","hentai","c:members-only"],
+		"not_channel_ids":[],
+		"remove_duplicates":true,
+		// "release_time":">1700935200",
+		// "limit_claims_per_channel":2,
+		// "duration":">=60"
+	}}/>
+</Layout>
+
+<style>
+	.claims {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 25px;
+		margin: auto;
+	}
+</style>

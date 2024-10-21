@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Claim from '../layouts/Claim.astro';
+import NotFound from '../layouts/NotFound.astro';
+import LBRY from '../utils/LBRY';
+
+import getClaim from '../utils/getClaim.js';
+
+const { claim, channel } = Astro.params;
+
+const resp = await getClaim('lbry://' + (channel ? `@${channel}/${claim}` : claim));
+
+if (resp.redirect) return Astro.redirect(resp.redirect);
+
+console.log(resp);
+
+---
+
+{resp.error && (
+    <NotFound error={resp.error}/>
+) || (
+    <Claim claim={resp}>
+    </Claim>
+)}
+

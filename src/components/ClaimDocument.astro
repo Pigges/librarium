@@ -1,0 +1,44 @@
+---
+import MarkdownClaim from './MarkdownClaim.astro';
+
+import generateContentUrl from '../utils/generateContentUrl';
+
+interface Props {
+    claim: object
+}
+
+const { claim } = Astro.props;
+
+let fetched;
+
+if (claim.value.source.media_type !== 'application/pdf')
+    fetched = await (await fetch(generateContentUrl(claim.name, claim.claim_id))).text();
+---
+
+<div class="document">
+    {claim.value.source.media_type === 'text/markdown' && (
+        <MarkdownClaim content={fetched}/>
+    )}
+
+    {claim.value.source.media_type === 'application/pdf' && (
+        <object data={generateContentUrl(claim.name, claim.claim_id)}></object>
+    )}
+
+    {claim.value.source.media_type === 'text/html' && (
+        <iframe srcdoc={fetched} sandbox="allow-same-origin"></iframe>
+    )}
+</div>
+<style>
+    .document {
+        /* height: 100%; */
+        height: auto;
+        width: 100%;
+        aspect-ratio: 16/9;
+    }
+
+    .document object, .document iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+</style>

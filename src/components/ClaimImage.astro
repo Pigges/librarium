@@ -1,0 +1,30 @@
+---
+import generateContentUrl from '../utils/generateContentUrl';
+
+interface Props {
+    claim: object
+}
+
+const { claim } = Astro.props;
+---
+
+<div class="image">
+    <img src={generateContentUrl(claim.name, claim.claim_id)} alt={claim.name}/>
+</div>
+<style>
+    .image {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+
+    img {
+        /* position: absolute; */
+        height: 100%;
+        max-width: 100%;
+        top: 0;
+        left: 50%;
+
+    }
+</style>

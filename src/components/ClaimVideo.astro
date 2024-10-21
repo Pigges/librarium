@@ -1,0 +1,33 @@
+---
+import generateContentUrl from '../utils/generateContentUrl';
+
+interface Props {
+	src: string,
+    claim: object
+}
+
+const { src, claim } = Astro.props;
+---
+
+<div class="wrapper">
+    <video id="player" playsinline controls poster={`/$/thumbnail/${claim.claim_id}`}>
+        <source src={generateContentUrl(claim.name, claim.claim_id)} type={claim.value.source.media_type || ""} />
+    </video>
+    <script is:inline src="/$/js/plyr.js"></script>
+    <script>
+        const player = new Plyr('#player');	
+    </script>
+</div>
+<style>
+    .wrapper {
+			width: 100%;
+			aspect-ratio: 16/9;
+			/* padding-top: 46.86% !important; */
+			position: relative;
+    }
+
+    video {
+        width: 100%;
+        height: 100%;
+    }
+</style>
