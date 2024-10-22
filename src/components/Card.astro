@@ -15,7 +15,7 @@ if (!content) return;
 ---
 
 <div class:list={["claim", (content.value_type == "channel" ? "channel" : "")]}>
-	<a href={content.permanent_url.replaceAll('#', ':').replace('lbry://', '/')}>
+	<a href={content.canonical_url.replaceAll('#', ':').replace('lbry://', '/')}>
 		<div class="thumbnail" >
 			{claim.reposted_claim && (
 				<div class="repost">
