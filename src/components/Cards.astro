@@ -47,9 +47,11 @@ const paginate = (url, change) => {
                 <a href={paginate(Astro.url, -1)}>Back</a>
             )}
         </div>
-        <div>
+        {totalPages && (
+          <div>
             <p>{`${currentPage}/${totalPages}`}</p>
-        </div>
+          </div>
+        )}
         <div>
             {currentPage < totalPages && (
                 <a href={paginate(Astro.url, 1)}>Next</a>
