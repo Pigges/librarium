@@ -1,0 +1,44 @@
+---
+import generateContentUrl from '../utils/generateContentUrl';
+import config from '../config';
+
+interface Props {
+    claim: object
+}
+
+
+const { claim } = Astro.props;
+
+const odysee = claim.canonical_url.replace("lbry://", "https://odysee.com/").replaceAll('#', ':');
+---
+
+<div class="wrapper">
+  <img src={config.THUMBNAIL_SERVER(claim)}>
+  <p>This claim does not have any source. Most likely, this is an Odysee stream. If that is the case, you can access the stream from here: 
+  <a href={odysee}>{odysee}</a></p>
+  </img>
+</div>
+<style>
+    .wrapper{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        aspect-ratio: 16/9;
+    }
+
+    img {
+        height: 100%;
+        max-width: 100%;
+    }
+
+    p {
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 20px;
+      background-color: #111;
+    }
+</style>

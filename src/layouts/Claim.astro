@@ -10,6 +10,7 @@ import renderMarkdown from '../utils/renderMarkdown';
 import ClaimVideo from '../components/ClaimVideo.astro';
 import ClaimImage from '../components/ClaimImage.astro';
 import ClaimDocument from '../components/ClaimDocument.astro';
+import ClaimNoSource from '../components/ClaimNoSource.astro';
 import formatDate from '../utils/formatDate';
 
 interface Props {
@@ -39,6 +40,8 @@ const meta = {
 
 let StreamType;
 
+
+
 switch (claim.value.stream_type) {
 	case "video":
 	case "audio":
@@ -52,6 +55,10 @@ switch (claim.value.stream_type) {
 		break;
 	default:
 		StreamType = `File type ${claim.value.stream_type} not supported.`
+}
+
+if (!claim.value.source) {
+  StreamType = ClaimNoSource;
 }
 
 // const structuredData = {
@@ -85,11 +92,7 @@ switch (claim.value.stream_type) {
 ---
 
 <Layout description={claim.value.description} metadata={metadata}>
-	<div slot="head">
-		<!-- <script type="application/ld+json" set:html={JSON.stringify(structuredData)} /> -->
-	</div>
 	<div class="claim">
-		<link rel="stylesheet" href="/$/css/plyr.css" />
 		<div class="container">
 				<StreamType claim={claim}/>
 		</div>
