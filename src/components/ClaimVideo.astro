@@ -1,4 +1,5 @@
 ---
+import * as yt from '../utils/youtube';
 import generateContentUrl from '../utils/generateContentUrl';
 
 interface Props {
@@ -7,16 +8,58 @@ interface Props {
 }
 
 const { src, claim } = Astro.props;
+
+const link = yt.extractYoutubeLink(claim.value.description);
+
+let storyboards = [];
+let captions = [];
+
+const ytId = link ? new URL(link).searchParams.get('v') : undefined;
+
+// try {
+//   const resp = (await (await fetch("https://inv.nadeko.net/api/v1/videos/" + )).json());
+//   if (!resp.error) {
+//     storyboards = resp.storyboards;
+//     captions = resp.captions;
+//   }
+// } catch {
+//   // Probably, Invidious is broken right now...
+// }
+// // const storyboard = storyboards[storyboards.length-1];
+// console.log(storyboards);
+
+const contentUrl = generateContentUrl(claim.name, claim.claim_id)
+
+// TODO: Fix vidstack plyr showing black image and only playing sound
 ---
 
 <div class="wrapper">
-    <video id="player" playsinline controls poster={`/$/thumbnail/${claim.claim_id}`}>
-        <source src={generateContentUrl(claim.name, claim.claim_id)} type={claim.value.source.media_type || ""} />
-    </video>
-    <script is:inline src="/$/js/plyr.js"></script>
-    <script>
-        const player = new Plyr('#player');	
-    </script>
+
+  <link rel="stylesheet" href="https://cdn.vidstack.io/player.css" />
+  <link rel="stylesheet" href="https://cdn.vidstack.io/plyr.css" />
+  <video id="target" autoplay poster={`/$/thumbnail/${claim.claim_id}`}>
+    <!-- <source src={contentUrl} type={claim.value.source.media_type || ""} type="video/mp4" /> -->
+    {captions.map(caption=>(
+      <track label={caption.label} kind="vtt" srclang={caption.language_code} src={"https://inv.pigg.es" + caption.url}/>
+    ))}
+  </video>
+  <script src="https://cdn.vidstack.io/plyr" type="module"></script>
+  <script type="module" define:vars={{claim, ytId, contentUrl}}>
+import { PlyrLayout, VidstackPlayer } from 'https://cdn.vidstack.io/player';
+
+  const player = await VidstackPlayer.create({
+    target: '#target',
+    title: claim.value.title || claim.name,
+    src: { src: contentUrl, type: 'video/mp4'},
+    poster: `/$/thumbnail/${claim.claim_id}`,
+    layout: new PlyrLayout({
+      thumbnails: ytId ? `/$/yt/storyboard/${ytId}` : undefined,
+      // thumbnails: storyboard.templateUrl,
+    }),
+  });
+</script>
+
+
 </div>
 <style>
     .wrapper {

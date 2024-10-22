@@ -12,8 +12,6 @@ const resp = await getClaim('lbry://' + (channel ? `@${channel}/${claim}` : clai
 
 if (resp.redirect) return Astro.redirect(resp.redirect);
 
-console.log(resp);
-
 ---
 
 {resp.error && (
